@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .routes import jobs, files, settings
+from .routes import jobs, files, settings, repliz_publish
 
 
 @asynccontextmanager
@@ -44,6 +44,7 @@ app.add_middleware(
         "http://127.0.0.1:5174",
         "http://127.0.0.1:5175",
         "https://naufalrizqullah.github.io",
+        "https://stella-desain.github.io",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -54,6 +55,7 @@ app.add_middleware(
 app.include_router(jobs.router)
 app.include_router(files.router)
 app.include_router(settings.router)
+app.include_router(repliz_publish.router)
 
 
 @app.get("/")
