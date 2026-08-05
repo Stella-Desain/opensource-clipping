@@ -17,6 +17,36 @@ from fastapi.staticfiles import StaticFiles
 
 from .routes import jobs, files, settings, repliz_publish
 
+from fastapi import UploadFile, File, HTTPException
+from pathlib import Path
+
+COOKIES_DIR = Path(__file__).parent / "storage" / "cookies"
+COOKIES_DIR.mkdir(parents=True, exist_ok=True)
+
+@app.post("/api/cookies")
+async def upload_cookies(file: UploadFile = File(...)):
+    content = await file.read()
+    text = content.decode("utf-8", errors="ignore")
+
+    # Validasi: pastikan format Netscape cookies.txt
+    if "Netscape HTTP Cookie File" not in text and "\tTRUE\t" not in text:
+        raise HTTPException(400, "File bukan cookies.txt format Netscape yang valid")
+
+    cookies_path = COOKIES_DIR / "cookies.txt"
+    cookies_path.write_bytes(content)
+    return {"status": "ok", "message": "Cookies berhasil diupload"}
+
+@app.get("/api/cookies/status")
+async def cookies_status():
+    exists = (COOKIES_DIR / "cookies.txt").exists()
+    return {"exists": exists}
+
+@app.delete("/api/cookies")
+async def delete_cookies():
+    path = COOKIES_DIR / "cookies.txt"
+    if path.exists():
+        path.unlink()
+    return {"status": "deleted"}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
