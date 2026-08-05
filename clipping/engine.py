@@ -179,6 +179,11 @@ def download_video(
             "progress_hooks": [_ydl_progress_hook],
         }
 
+    # --- Cookies: pass authenticated session to yt-dlp if provided ---
+    if getattr(args, "cookies_file", None) and os.path.exists(args.cookies_file):
+        ydl_opts["cookiefile"] = args.cookies_file
+        print(f"🍪 Menggunakan cookies dari {args.cookies_file}", flush=True)
+
     # --- Subtitle download — only supported for YouTube ---
     if use_dlp_subs and uses_youtube_format:
         print("      Mencoba mencari subtitle bahasa otomatis (en / id)...")
