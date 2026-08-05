@@ -209,6 +209,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Video source platform. Determines download behavior and subtitle availability.",
     )
     p.add_argument(
+        "--cookies-file",
+        default=None,
+        help="Path to cookies.txt (Netscape format) for yt-dlp authentication (YouTube login-required videos).",
+    )
+    p.add_argument(
         "--tiktok",
         action="store_true",
         default=False,
