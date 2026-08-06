@@ -116,6 +116,37 @@ const StudioAPI = (() => {
     return request('/api/shutdown', { method: 'POST' });
   }
 
+  // ---- Cookies (yt-dlp authentication) ----
+  async function fetchCookiesStatus() {
+    return request('/api/cookies/status');
+  }
+
+  async function uploadCookies(file) {
+    const base = getBackendUrl();
+    if (!base) throw new Error('Backend URL not configured. Please connect first.');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${base}/api/cookies`, {
+      method: 'POST',
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `Upload failed: ${res.status}`);
+    }
+    return res.json();
+  }
+
+  async function deleteCookies() {
+    return request('/api/cookies', { method: 'DELETE' });
+  }
+
   // Public API
   return {
     getBackendUrl,
@@ -131,6 +162,9 @@ const StudioAPI = (() => {
     updateSettings,
     createSSE,
     shutdownServer,
+    fetchCookiesStatus,
+    uploadCookies,
+    deleteCookies,
   };
 })();
 

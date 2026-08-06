@@ -224,6 +224,37 @@
                         </div>
                     </div>
 
+                    <!-- Cookies -->
+                    <div class="glass-card p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm mb-6">
+                        <h3 class="font-display font-semibold text-base text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                            <span class="text-lg">🍪</span> YouTube Cookies
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-5">
+                            Diperlukan untuk video age-restricted atau login-required. Diambil via ekstensi browser
+                            <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank" rel="noopener" class="text-brand-500 hover:text-brand-600 dark:text-brand-400">"Get cookies.txt LOCALLY"</a>.
+                            Berlaku global untuk semua job, biasanya expired dalam ~2 minggu.
+                        </p>
+
+                        <div class="flex items-center gap-3 flex-wrap">
+                            <span id="cookies-status-badge" class="text-sm font-medium text-slate-400">🍪 Belum ada cookies</span>
+
+                            <input id="cookies-file-input" type="file" accept=".txt" class="hidden" onchange="handleCookiesUpload(event)">
+
+                            <button type="button" onclick="document.getElementById('cookies-file-input').click()"
+                                class="text-xs font-medium px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                                Upload cookies.txt
+                            </button>
+
+                            <button id="cookies-delete-btn" type="button" onclick="handleCookiesDelete()" style="display:none"
+                                class="text-xs font-medium px-3 py-2.5 rounded-lg border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors text-red-500 flex items-center gap-2">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                Hapus
+                            </button>
+                        </div>
+                        <p id="cookies-msg" class="hidden text-xs mt-3"></p>
+                    </div>
+
                     <!-- Save message -->
                     <div id="save-msg" class="hidden text-sm mb-4"></div>
 
@@ -293,6 +324,9 @@
                 // Connection info
                 document.getElementById('sys-backend-url').textContent = StudioAPI.getBackendUrl() || '—';
                 document.getElementById('sys-status').innerHTML = '<span class="text-emerald-500">🟢 Connected</span>';
+
+                // Cookies status
+                loadCookiesStatus();
             } catch (err) {
                 document.getElementById('settings-loading').classList.add('hidden');
                 document.getElementById('settings-form').classList.remove('hidden');
@@ -351,6 +385,70 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Save Settings';
                 lucide.createIcons();
+            }
+        }
+
+        async function loadCookiesStatus() {
+            const badge = document.getElementById('cookies-status-badge');
+            const deleteBtn = document.getElementById('cookies-delete-btn');
+            try {
+                const status = await StudioAPI.fetchCookiesStatus();
+                if (status.exists) {
+                    badge.textContent = '✅ Cookies aktif';
+                    badge.className = 'text-sm font-medium text-emerald-500';
+                    deleteBtn.style.display = 'inline-flex';
+                } else {
+                    badge.textContent = '🍪 Belum ada cookies';
+                    badge.className = 'text-sm font-medium text-slate-400';
+                    deleteBtn.style.display = 'none';
+                }
+            } catch (err) {
+                badge.textContent = '🍪 Belum ada cookies';
+                badge.className = 'text-sm font-medium text-slate-400';
+                deleteBtn.style.display = 'none';
+            }
+        }
+
+        async function handleCookiesUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const badge = document.getElementById('cookies-status-badge');
+            const msg = document.getElementById('cookies-msg');
+            badge.textContent = '⏳ Mengupload...';
+            badge.className = 'text-sm font-medium text-slate-400';
+            msg.classList.add('hidden');
+
+            try {
+                await StudioAPI.uploadCookies(file);
+                msg.className = 'text-xs mt-3 text-emerald-500';
+                msg.textContent = '✅ Cookies berhasil diupload';
+                msg.classList.remove('hidden');
+                loadCookiesStatus();
+            } catch (err) {
+                msg.className = 'text-xs mt-3 text-red-500';
+                msg.textContent = '❌ Gagal upload: ' + err.message;
+                msg.classList.remove('hidden');
+                loadCookiesStatus();
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        async function handleCookiesDelete() {
+            if (!confirm('Hapus cookies.txt dari server?')) return;
+
+            const msg = document.getElementById('cookies-msg');
+            try {
+                await StudioAPI.deleteCookies();
+                msg.className = 'text-xs mt-3 text-emerald-500';
+                msg.textContent = '✅ Cookies dihapus';
+                msg.classList.remove('hidden');
+                loadCookiesStatus();
+            } catch (err) {
+                msg.className = 'text-xs mt-3 text-red-500';
+                msg.textContent = '❌ Gagal menghapus: ' + err.message;
+                msg.classList.remove('hidden');
             }
         }
 
