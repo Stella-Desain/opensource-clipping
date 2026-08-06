@@ -1,0 +1,2 @@
+# Netscape HTTP Cookie File
+.youtube.com	TRUE	/	TRUE	1893456000	LOGIN_INFO	dummy_value
